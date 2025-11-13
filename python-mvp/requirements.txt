@@ -1,0 +1,13 @@
+
+# ===== 部署 PP-OCR 3.0 所需依赖 =====
+# PaddlePaddle GPU 版本，需要 驱动支持的 CUDA 版本 >= 12.6
+paddlepaddle-gpu==3.2.0 --index-url https://www.paddlepaddle.org.cn/packages/stable/cu126/
+
+# PaddleOCR 客户端 + 服务端 + 推理端 集成命令行工具
+# 这里我们需要额外的依赖组 doc-parser 用于支持文档解析
+paddleocr[doc-parser]
+
+# 安装指定 URL 的 safetensors wheel 包（适配 CU126、Linux x86_64）
+https://paddle-whl.bj.bcebos.com/nightly/cu126/safetensors/safetensors-0.6.2.dev0-cp38-abi3-linux_x86_64.whl
+
+# 下载模型
