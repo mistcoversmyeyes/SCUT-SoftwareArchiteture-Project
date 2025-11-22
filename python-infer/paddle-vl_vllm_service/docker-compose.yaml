@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  paddleocr-vllm:
+    image: ccr-2vdh3abv-pub.cnc.bj.baidubce.com/paddlepaddle/paddleocr-genai-vllm-server:latest-offline
+    command: >
+      paddleocr genai_server
+        --model_name PaddleOCR-VL-0.9B
+        --host 0.0.0.0
+        --port 8118
+        --backend vllm
+        --backend_config /configs/vllm_config.yaml
+    volumes:
+      - ./vllm_config.yaml:/configs/vllm_config.yaml:ro
+    network_mode: host
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    restart: unless-stopped
