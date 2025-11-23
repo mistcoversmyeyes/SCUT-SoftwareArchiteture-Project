@@ -226,11 +226,11 @@ curl -X POST http://localhost:8090/api/v1/ocr/document \
 
 ---
 
-### 3. 表格识别（PP-StructureV3）
+### 3. 文档结构识别（PP-StructureV3）
 
 #### `POST /ocr/table`
 
-**功能**：使用PP-StructureV3进行专业表格识别，适用于财务报表、数据表格等场景。
+**功能**：使用PP-StructureV3进行文档结构识别，支持表格、公式、版面分析等，适用于复杂文档解析场景。
 
 **请求参数**：
 
@@ -238,63 +238,91 @@ curl -X POST http://localhost:8090/api/v1/ocr/document \
 |-----|------|------|------|
 | file | File | 是 | 图片文件 |
 | compress | boolean | 否 | 是否前端已压缩（默认false） |
-| layout | boolean | 否 | 是否进行版面分析（默认true） |
-| return_html | boolean | 否 | 是否返回HTML格式（默认true） |
+| output_format | string | 否 | 输出格式，可选值："json"（默认）或 "markdown" |
 
 **请求示例**：
 
 ```bash
+# JSON格式输出（默认）
 curl -X POST http://localhost:8090/api/v1/ocr/table \
-  -F "file=@table.jpg" \
-  -F "return_html=true"
+  -F "file=@document.jpg"
+
+# Markdown格式输出
+curl -X POST http://localhost:8090/api/v1/ocr/table \
+  -F "file=@document.jpg" \
+  -F "output_format=markdown"
 ```
 
-**响应示例**：
+**响应示例（JSON格式）**：
 
 ```json
 {
   "success": true,
   "pipeline": "structure",
   "result": {
-    "tables": [
-      {
-        "bbox": [x1, y1, x2, y2],
-        "html": "<table><tr><td>...</td></tr></table>",
-        "cells": [
-          ["表头1", "表头2", "表头3"],
-          ["数据1", "数据2", "数据3"]
-        ],
-        "rows": 5,
-        "cols": 3,
-        "confidence": 0.95
-      }
-    ],
     "layout": [
       {
-        "type": "text",
-        "bbox": [x1, y1, x2, y2],
-        "content": "表格标题"
-      },
-      {
-        "type": "table",
-        "bbox": [x1, y1, x2, y2],
-        "table_id": 0
+        "label": "paragraph_title",
+        "bbox": [26.88, 31.05, 405.08, 59.64],
+        "score": 0.495
       }
     ],
-    "tables_count": 1
+    "tables": [],
+    "formulas": [],
+    "parsing_res": [
+      {
+        "label": "doc_title",
+        "order_label": "doc_title",
+        "bbox": [26, 31, 405, 59],
+        "content": "♯ 如果是列表，取第一个元素",
+        "width": 378.19,
+        "height": 28.59,
+        "num_of_lines": 1,
+        "index": 0,
+        "order_index": 1
+      }
+    ],
+    "format": "json"
   },
   "metrics": {
-    "total_time": 1.567,
-    "inference_time": 1.234,
-    "upload_time": 0.100,
-    "layout_time": 0.456,
-    "table_time": 0.778,
+    "total_time": 3.14,
+    "inference_time": 3.14,
+    "upload_time": 0.0,
     "image_size_kb": 1200,
     "compressed": false,
     "source": "local"
   }
 }
 ```
+
+**响应示例（Markdown格式）**：
+
+```json
+{
+  "success": true,
+  "pipeline": "structure",
+  "result": {
+    "markdown": "# ♯ 如果是列表，取第一个元素\n",
+    "format": "markdown"
+  },
+  "metrics": {
+    "total_time": 2.77,
+    "inference_time": 2.77,
+    "upload_time": 0.0,
+    "image_size_kb": 1200,
+    "compressed": false,
+    "source": "local"
+  }
+}
+```
+
+**字段说明**：
+
+- **layout**: 版面检测结果，包含文档区域类型（标题/段落/表格等）、位置和置信度
+- **tables**: 表格识别结果，包含HTML表格和单元格OCR结果
+- **formulas**: 公式识别结果列表
+- **parsing_res**: 完整的文档解析结果，包含每个元素的标签、内容、位置等详细信息
+- **markdown**: Markdown格式的文档内容（仅当output_format="markdown"时返回）
 
 ---
 
