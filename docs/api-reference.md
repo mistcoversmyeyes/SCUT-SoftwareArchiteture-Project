@@ -77,36 +77,16 @@ Content-Type: multipart/form-data
 |-----|------|------|------|
 | file | File | 是 | 图片文件（支持jpg/png/bmp） |
 | compress | boolean | 否 | 是否前端已压缩（默认false） |
-| lang | string | 否 | 语言（默认'ch'，支持'en'） |
-| det | boolean | 否 | 是否启用文本检测（默认true） |
-| rec | boolean | 否 | 是否启用文本识别（默认true） |
-| cls | boolean | 否 | 是否启用方向分类（默认true） |
 
 **请求示例**：
 
 ```bash
 curl -X POST http://localhost:8090/api/v1/ocr/text \
-  -F "file=@test_image.jpg" \
-  -F "compress=false" \
-  -F "lang=ch"
+  -F "file=@test_image.jpg"
 ```
-
-```python
-import requests
-
-with open('test_image.jpg', 'rb') as f:
-    response = requests.post(
-        'http://localhost:8090/api/v1/ocr/text',
-        files={'file': f},
-        data={'compress': 'false', 'lang': 'ch'}
-    )
-    result = response.json()
-```
-
 ```javascript
 const formData = new FormData();
 formData.append('file', fileInput.files[0]);
-formData.append('compress', 'false');
 
 const response = await fetch('http://localhost:8090/api/v1/ocr/text', {
   method: 'POST',
@@ -122,31 +102,34 @@ const result = await response.json();
   "success": true,
   "pipeline": "ocrv5",
   "result": {
-    "text": "识别的完整文本内容",
+    "text": "#\n如果是列表，\n取第一个元素",
     "regions": [
       {
-        "bbox": [[x1, y1], [x2, y2], [x3, y3], [x4, y4]],
-        "text": "第一行文本",
-        "score": 0.987
+        "text": "#",
+        "score": 0.9977329969406128,
+        "polygon": [[28, 34], [47, 34], [47, 57], [28, 57]],
+        "bbox": [28, 34, 47, 57]
       },
       {
-        "bbox": [[x1, y1], [x2, y2], [x3, y3], [x4, y4]],
-        "text": "第二行文本",
-        "score": 0.965
+        "text": "如果是列表，",
+        "score": 0.9989599585533142,
+        "polygon": [[57, 30], [214, 30], [214, 60], [57, 60]],
+        "bbox": [57, 30, 214, 60]
+      },
+      {
+        "text": "取第一个元素",
+        "score": 0.9998381733894348,
+        "polygon": [[231, 29], [407, 29], [407, 63], [231, 63]],
+        "bbox": [231, 29, 407, 63]
       }
     ],
-    "detected_lines": 2
+    "detected_lines": 3
   },
   "metrics": {
-    "total_time": 1.234,
-    "inference_time": 0.987,
-    "upload_time": 0.123,
-    "preprocess_time": 0.050,
-    "detection_time": 0.400,
-    "recognition_time": 0.587,
-    "image_size_kb": 450,
-    "image_width": 1920,
-    "image_height": 1080,
+    "total_time": 0.82,
+    "inference_time": 0.77,
+    "upload_time": 0.05,
+    "image_size_kb": 45.2,
     "compressed": false,
     "source": "local"
   }

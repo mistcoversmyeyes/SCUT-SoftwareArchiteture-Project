@@ -7,9 +7,10 @@ pydantic==2.5.0
 pydantic-settings==2.1.0
 python-multipart==0.0.6
 
-# OCR核心
-paddleocr>=2.7.0
-paddlepaddle-gpu>=2.5.0  # 如果使用GPU
+# OCR核心 (PaddleOCR 3.x)
+paddleocr[all]
+# paddlepaddle-gpu 需单独安装（requirements.txt不支持-i参数）:
+# python -m pip install paddlepaddle-gpu==3.2.0 -i https://www.paddlepaddle.org.cn/packages/stable/cu126/
 
 # 图像处理
 pillow>=10.0.0

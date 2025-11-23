@@ -74,11 +74,7 @@ async def process_upload_file(file: UploadFile) -> tuple[np.ndarray, float, floa
 @router.post("/text", response_model=OCRResponse, summary="基础文本识别（OCRv5）")
 async def ocr_text(
     file: UploadFile = File(..., description="图片文件"),
-    compress: bool = Form(False, description="是否前端已压缩"),
-    lang: str = Form("ch", description="语言(ch/en)"),
-    cls: bool = Form(True, description="是否启用方向分类"),
-    det: bool = Form(True, description="是否启用文本检测"),
-    rec: bool = Form(True, description="是否启用文本识别")
+    compress: bool = Form(False, description="是否前端已压缩")
 ):
     """
     使用PP-OCRv5进行基础文本识别
@@ -97,7 +93,7 @@ async def ocr_text(
         image_array, upload_time, file_size_kb = await process_upload_file(file)
 
         # 执行OCR推理
-        prediction = ocr_v5_service.predict(image_array, cls=cls, det=det, rec=rec)
+        prediction = ocr_v5_service.predict(image_array)
 
         # 构造响应
         total_time = time.time() - total_start
@@ -110,6 +106,7 @@ async def ocr_text(
                 total_time=total_time,
                 inference_time=prediction["inference_time"],
                 upload_time=upload_time,
+                preprocess_time=None,
                 image_size_kb=file_size_kb,
                 compressed=compress,
                 source=prediction["source"]
@@ -158,6 +155,7 @@ async def ocr_document(
                 total_time=total_time,
                 inference_time=prediction["inference_time"],
                 upload_time=upload_time,
+                preprocess_time=None,
                 image_size_kb=file_size_kb,
                 compressed=compress,
                 source=prediction["source"]
@@ -207,6 +205,7 @@ async def ocr_table(
                 total_time=total_time,
                 inference_time=prediction["inference_time"],
                 upload_time=upload_time,
+                preprocess_time=None,
                 image_size_kb=file_size_kb,
                 compressed=compress,
                 source=prediction["source"]
