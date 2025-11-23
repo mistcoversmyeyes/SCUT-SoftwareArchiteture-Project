@@ -173,14 +173,15 @@ async def ocr_document(
 async def ocr_table(
     file: UploadFile = File(..., description="图片文件"),
     compress: bool = Form(False, description="是否前端已压缩"),
-    return_html: bool = Form(True, description="是否返回HTML格式表格")
+    output_format: str = Form("json", description="输出格式(json/markdown)")
 ):
     """
     使用PP-StructureV3进行专业表格识别
 
-    - 适用场景：Excel截图、数据报表、统计表格
+    - 适用场景：Excel截图、数据报表、统计表格、复杂文档
     - 推理位置：宿主机本地
     - 预期耗时：~1.5s
+    - 支持输出：json（结构化数据）/ markdown（文档格式）
     """
     if not structure_v3_service:
         raise HTTPException(status_code=503, detail="StructureV3服务未初始化")
@@ -192,7 +193,7 @@ async def ocr_table(
         image_array, upload_time, file_size_kb = await process_upload_file(file)
 
         # 执行Structure推理
-        prediction = structure_v3_service.predict(image_array, return_html=return_html)
+        prediction = structure_v3_service.predict(image_array, output_format=output_format)
 
         # 构造响应
         total_time = time.time() - total_start
