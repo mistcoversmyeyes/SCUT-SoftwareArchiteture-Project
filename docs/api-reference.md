@@ -226,30 +226,39 @@ curl -X POST http://localhost:8090/api/v1/ocr/document \
 
 ---
 
-### 3. 文档结构识别（PP-StructureV3）
+### 3. 文档结构识别（PP-StructureV3，支持PDF）
 
 #### `POST /ocr/table`
 
-**功能**：使用PP-StructureV3进行文档结构识别，支持表格、公式、版面分析等，适用于复杂文档解析场景。
+**功能**：使用PP-StructureV3进行文档结构识别，支持表格、公式、版面分析等。支持图片和PDF文件，适用于复杂文档解析场景。
 
 **请求参数**：
 
 | 参数 | 类型 | 必填 | 说明 |
 |-----|------|------|------|
-| file | File | 是 | 图片文件 |
+| file | File | 是 | 图片文件（jpg/png/bmp）或PDF文件 |
 | compress | boolean | 否 | 是否前端已压缩（默认false） |
 | output_format | string | 否 | 输出格式，可选值："json"（默认）或 "markdown" |
 
 **请求示例**：
 
 ```bash
-# JSON格式输出（默认）
+# 图片 - JSON格式输出（默认）
 curl -X POST http://localhost:8090/api/v1/ocr/table \
   -F "file=@document.jpg"
 
-# Markdown格式输出
+# 图片 - Markdown格式输出
 curl -X POST http://localhost:8090/api/v1/ocr/table \
   -F "file=@document.jpg" \
+  -F "output_format=markdown"
+
+# PDF - JSON格式输出
+curl -X POST http://localhost:8090/api/v1/ocr/table \
+  -F "file=@document.pdf"
+
+# PDF - Markdown格式输出
+curl -X POST http://localhost:8090/api/v1/ocr/table \
+  -F "file=@document.pdf" \
   -F "output_format=markdown"
 ```
 

@@ -19,7 +19,7 @@ class Settings(BaseSettings):
 
     # 文件上传限制
     MAX_FILE_SIZE_MB: int = 10
-    ALLOWED_EXTENSIONS: set[str] = {"jpg", "jpeg", "png", "bmp"}
+    ALLOWED_EXTENSIONS: set[str] = {"jpg", "jpeg", "png", "bmp", "pdf"}
 
     # Docker vLLM配置
     VLLM_ENDPOINT: str = "http://localhost:8118"

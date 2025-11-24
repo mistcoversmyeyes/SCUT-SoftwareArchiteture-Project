@@ -3,7 +3,6 @@ PP-StructureV3服务层
 用于表格和文档结构识别
 """
 import time
-import numpy as np
 from paddleocr import PPStructureV3
 from typing import Literal
 import logging
@@ -58,14 +57,14 @@ class StructureV3Service:
 
     def predict(
         self,
-        image: np.ndarray,
+        input: str,
         output_format: Literal["json", "markdown"] = "json"
     ) -> dict:
         """
         执行文档结构识别推理
 
         Args:
-            image: numpy数组格式的图片
+            input: 图片或PDF文件路径
             output_format: 输出格式 ("json" 或 "markdown")
 
         Returns:
@@ -75,7 +74,7 @@ class StructureV3Service:
 
         try:
             # 执行Structure推理
-            result = self.model.predict(image)
+            result = self.model.predict(input=input)
             inference_time = time.time() - start_time
 
             # 根据输出格式处理结果

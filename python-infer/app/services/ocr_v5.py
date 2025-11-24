@@ -3,7 +3,6 @@ OCRv5服务层
 使用PaddleOCR进行基础文本识别
 """
 import time
-import numpy as np
 from paddleocr import PaddleOCR
 from typing import Optional
 import logging
@@ -17,23 +16,12 @@ class OCRv5Service:
     def __init__(
         self,
         lang: str = 'ch',
-        ocr_version: str = 'PP-OCRv5',
         device: str = 'gpu:0',
-        use_doc_orientation_classify: bool = False,
-        use_doc_unwarping: bool = False,
-        use_textline_orientation: bool = False
+        use_doc_orientation_classify: bool = False,     # 是否启用文档方向分类
+        use_doc_unwarping: bool = False,                # 是否启用文本图像矫正
+        use_textline_orientation: bool = False,         # 是否启用文本行方向分类
+        ocr_version: str = 'PP-OCRv5',                  # OCR版本选择,如 'PP-OCRv5', 'PP-OCRv4', 'PP-OCRv3'
     ):
-        """
-        初始化OCRv5模型
-
-        Args:
-            lang: 语言代码 (ch/en/ja等)
-            ocr_version: OCR版本 (PP-OCRv5/PP-OCRv4)
-            device: 推理设备 (gpu:0/cpu)
-            use_doc_orientation_classify: 是否启用文档方向分类
-            use_doc_unwarping: 是否启用文本图像矫正
-            use_textline_orientation: 是否启用文本行方向分类
-        """
         logger.info("初始化OCRv5模型...")
         self.ocr = PaddleOCR(
             lang=lang,
@@ -45,12 +33,12 @@ class OCRv5Service:
         )
         logger.info("OCRv5模型加载完成")
 
-    def predict(self, image: np.ndarray) -> dict:
+    def predict(self, image_path: str) -> dict:
         """
         执行OCR推理
 
         Args:
-            image: numpy数组格式的图片
+            image_path: 图片文件路径
 
         Returns:
             包含识别结果和推理时间的字典
@@ -59,7 +47,7 @@ class OCRv5Service:
 
         try:
             # 执行OCR推理
-            result = self.ocr.predict(image)
+            result = self.ocr.predict(image_path)
             inference_time = time.time() - start_time
 
             # 格式化结果

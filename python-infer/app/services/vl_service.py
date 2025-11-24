@@ -3,7 +3,6 @@ PaddleOCR-VL服务层
 宿主机实例化VL对象，依赖Docker vLLM推理端点
 """
 import time
-import numpy as np
 from paddleocr import PaddleOCR
 import logging
 import requests
@@ -14,7 +13,7 @@ logger = logging.getLogger(__name__)
 class VLService:
     """PaddleOCR-VL服务"""
 
-    def __init__(self, vllm_url: str = "http://localhost:8118", show_log: bool = False):
+    def __init__(self, vllm_url: str = "http://localhost:8118"):
         """
         初始化VL模型
 
@@ -31,7 +30,6 @@ class VLService:
                 use_vl=True,                    # 启用VL模型
                 vllm_url=vllm_url,              # vLLM推理端点
                 use_gpu=False,                  # 宿主机不需要GPU（推理在Docker）
-                show_log=show_log
             )
             logger.info("VL模型初始化完成")
         except Exception as e:
@@ -39,12 +37,12 @@ class VLService:
             self.vl_ocr = None
             raise
 
-    def predict(self, image: np.ndarray) -> dict:
+    def predict(self, image_path: str) -> dict:
         """
         执行VL推理
 
         Args:
-            image: numpy数组格式的图片
+            image_path: 图片文件路径
 
         Returns:
             包含识别结果和推理时间的字典
@@ -56,7 +54,7 @@ class VLService:
 
         try:
             # 调用VL对象推理（内部会调用vLLM端点）
-            result = self.vl_ocr.ocr(image, use_vl=True)
+            result = self.vl_ocr.ocr(image_path, use_vl=True)
             inference_time = time.time() - start_time
 
             # 格式化结果

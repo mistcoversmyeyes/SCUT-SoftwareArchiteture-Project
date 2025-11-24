@@ -3,10 +3,8 @@
 """
 import sys
 import json
-sys.path.insert(0, '/home/mistcovers/SCUT_25_Fall/SCUT-SoftwareArchiteture-Project/python-infer/app')
+sys.path.insert(0, '/home/yuming/SCUT/SCUT_25_Fall/SCUT-SoftwareArchiteture-Project/python-infer/app')
 
-from PIL import Image
-import numpy as np
 from services.ocr_v5 import OCRv5Service
 
 def test_ocr_v5(image_path: str):
@@ -26,8 +24,7 @@ def test_ocr_v5(image_path: str):
     print("=" * 50)
     print("执行推理")
     print("=" * 50)
-    image = Image.open(image_path)
-    result = service.predict(np.array(image))
+    result = service.predict(image_path)
 
     print("=" * 50)
     print("结果")

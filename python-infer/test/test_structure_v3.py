@@ -5,8 +5,6 @@ import sys
 import json
 sys.path.insert(0, '/home/yuming/SCUT/SCUT_25_Fall/SCUT-SoftwareArchiteture-Project/python-infer/app')
 
-from PIL import Image
-import numpy as np
 from services.structure_v3 import StructureV3Service
 
 def test_structure_v3_json(image_path: str):
@@ -28,8 +26,7 @@ def test_structure_v3_json(image_path: str):
     print("=" * 50)
     print("执行推理 (output_format='json')")
     print("=" * 50)
-    image = Image.open(image_path)
-    result = service.predict(np.array(image), output_format="json")
+    result = service.predict(image_path, output_format="json")
 
     print("=" * 50)
     print("JSON 结果")
@@ -58,8 +55,7 @@ def test_structure_v3_markdown(image_path: str):
     print("=" * 50)
     print("执行推理 (output_format='markdown')")
     print("=" * 50)
-    image = Image.open(image_path)
-    result = service.predict(np.array(image), output_format="markdown")
+    result = service.predict(image_path, output_format="markdown")
 
     print("=" * 50)
     print("Markdown 结果")
