@@ -138,97 +138,124 @@ const result = await response.json();
 
 ---
 
-### 2. 文档结构解析（PaddleOCR-VL）
+### 2. 文档结构解析（PaddleOCR-VL，支持PDF）
 
-#### `POST /ocr/document`
+#### `POST /ocr/document/vl_model`
 
-**功能**：使用PaddleOCR-VL进行复杂文档解析，支持表格、公式、图表等结构化内容。
+**功能**：使用PaddleOCR-VL进行复杂文档解析，自动识别标题、段落、表格、公式等文档结构。支持图片和PDF文件。
 
 **请求参数**：
 
 | 参数 | 类型 | 必填 | 说明 |
 |-----|------|------|------|
-| file | File | 是 | 图片或PDF文件 |
+| file | File | 是 | 图片文件（jpg/png/bmp）或PDF文件 |
 | compress | boolean | 否 | 是否前端已压缩（默认false） |
-| parse_table | boolean | 否 | 是否解析表格（默认true） |
-| parse_formula | boolean | 否 | 是否解析公式（默认true） |
-| parse_chart | boolean | 否 | 是否解析图表（默认true） |
+| format | string | 否 | 输出格式，可选值："json"（默认）或 "markdown" |
 
 **请求示例**：
 
 ```bash
+# 图片 - JSON格式（默认）
+curl -X POST http://localhost:8090/api/v1/ocr/document \
+  -F "file=@complex_doc.jpg"
+
+# 图片 - Markdown格式
 curl -X POST http://localhost:8090/api/v1/ocr/document \
   -F "file=@complex_doc.jpg" \
-  -F "parse_table=true"
+  -F "format=markdown"
+
+# PDF文件 - JSON格式
+curl -X POST http://localhost:8090/api/v1/ocr/document \
+  -F "file=@document.pdf"
 ```
 
-**响应示例**：
+**响应示例（JSON格式）**：
 
 ```json
 {
   "success": true,
   "pipeline": "vl",
   "result": {
-    "text": "文档完整文本",
+    "text": "第七章作业-解答\n7.10 讨论题\n2. 利润=收入-总成本，LCC=全生命周期成本...",
     "layout": [
       {
-        "type": "title",
-        "bbox": [x1, y1, x2, y2],
-        "content": "文档标题"
+        "type": "paragraph_title",
+        "content": "第七章作业-解答",
+        "bbox": [61, 110, 466, 171],
+        "page": 0
       },
       {
-        "type": "paragraph",
-        "bbox": [x1, y1, x2, y2],
-        "content": "段落文本..."
+        "type": "paragraph_title",
+        "content": "7.10 讨论题",
+        "bbox": [62, 233, 290, 279],
+        "page": 0
       },
       {
-        "type": "table",
-        "bbox": [x1, y1, x2, y2],
-        "content": {
-          "html": "<table>...</table>",
-          "rows": 5,
-          "cols": 3,
-          "cells": [
-            ["单元格1", "单元格2", "单元格3"],
-            ["数据1", "数据2", "数据3"]
-          ]
-        }
-      },
-      {
-        "type": "formula",
-        "bbox": [x1, y1, x2, y2],
-        "content": {
-          "latex": "E = mc^2",
-          "text": "E equals m times c squared"
-        }
+        "type": "text",
+        "content": "2. 利润=收入-总成本，LCC=全生命周期成本，有形/无形、直接/间接成本，储备分应急和管理。",
+        "bbox": [80, 322, 1089, 353],
+        "page": 0
       }
     ],
     "elements_count": {
-      "title": 1,
-      "paragraph": 5,
-      "table": 2,
-      "formula": 3,
-      "chart": 1
-    }
+      "paragraph_title": 3,
+      "text": 4
+    },
+    "pages": 1
   },
   "metrics": {
-    "total_time": 2.456,
-    "inference_time": 1.890,
-    "upload_time": 0.150,
-    "network_time": 0.080,
-    "docker_processing_time": 1.810,
-    "image_size_kb": 2500,
+    "total_time": 2.45,
+    "inference_time": 2.23,
+    "upload_time": 0.15,
+    "image_size_kb": 850,
     "compressed": false,
     "source": "docker"
   }
 }
 ```
 
+**响应示例（Markdown格式）**：
+
+```json
+{
+  "success": true,
+  "pipeline": "vl",
+  "result": {
+    "markdown": "# 第七章作业-解答\n\n# 7.10 讨论题\n\n2. 利润=收入-总成本...",
+    "elements_count": {
+      "paragraph_title": 3,
+      "text": 4
+    },
+    "pages": 1
+  },
+  "metrics": {
+    "total_time": 2.45,
+    "inference_time": 2.23,
+    "upload_time": 0.15,
+    "image_size_kb": 850,
+    "compressed": false,
+    "source": "docker"
+  }
+}
+```
+
+**字段说明**：
+
+- **text**: 文档完整文本内容（JSON格式时返回）
+- **layout**: 版面元素列表（JSON格式时返回）
+  - **type**: 元素类型（由模型识别，常见值：paragraph_title, text, table, formula等）
+  - **content**: 识别的文本内容（纯字符串）
+  - **bbox**: 坐标数组 [x1, y1, x2, y2]
+  - **page**: 元素所在页码（仅PDF文件，从0开始）
+- **markdown**: Markdown格式的文档内容（Markdown格式时返回）
+- **elements_count**: 各类型元素统计
+- **pages**: 文档总页数
+
 ---
 
 ### 3. 文档结构识别（PP-StructureV3，支持PDF）
 
-#### `POST /ocr/table`
+#### `POST /ocr/document/structure_model`
 
 **功能**：使用PP-StructureV3进行文档结构识别，支持表格、公式、版面分析等。支持图片和PDF文件，适用于复杂文档解析场景。
 

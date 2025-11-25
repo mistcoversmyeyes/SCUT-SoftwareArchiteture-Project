@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
 
+from typing import Optional
 from core.config import settings
 from api.v1 import ocr, health
 from services.ocr_v5 import OCRv5Service
@@ -21,9 +22,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # 全局服务实例
-ocr_v5_service: OCRv5Service = None
-vl_service: VLService = None
-structure_v3_service: StructureV3Service = None
+ocr_v5_service: Optional[OCRv5Service] = None
+vl_service: Optional[VLService] = None
+structure_v3_service: Optional[StructureV3Service] = None
 
 
 @asynccontextmanager
@@ -40,26 +41,25 @@ async def lifespan(app: FastAPI):
         # 初始化OCRv5服务
         logger.info("正在初始化 OCRv5 服务...")
         ocr_v5_service = OCRv5Service(
-            use_gpu=settings.USE_GPU,
-            show_log=settings.SHOW_LOG
+            lang = 'ch',
+            device = 'gpu:0',
         )
         logger.info("✓ OCRv5 服务就绪")
-
-        # 初始化VL服务
-        logger.info("正在初始化 PaddleOCR-VL 服务...")
-        vl_service = VLService(
-            vllm_url=settings.VLLM_ENDPOINT,
-            show_log=settings.SHOW_LOG
-        )
-        logger.info(f"✓ VL 服务就绪 (vLLM端点: {settings.VLLM_ENDPOINT})")
 
         # 初始化StructureV3服务
         logger.info("正在初始化 StructureV3 服务...")
         structure_v3_service = StructureV3Service(
-            use_gpu=settings.USE_GPU,
-            show_log=settings.SHOW_LOG
+            device='gpu:0',
+            use_table_recognition=True,
+            use_formula_recognition=True,
+            use_region_detection=True,
         )
         logger.info("✓ StructureV3 服务就绪")
+
+        # 初始化VL服务
+        logger.info("正在初始化 PaddleOCR-VL 服务...")
+        vl_service = VLService()
+        logger.info(f"✓ VL 服务就绪 (vLLM端点: {settings.VLLM_ENDPOINT})")
 
         # 将服务实例注入到路由模块
         ocr.set_services(ocr_v5_service, vl_service, structure_v3_service)

@@ -10,9 +10,10 @@ services:
         --port 8118
         --backend vllm
         --backend_config /configs/vllm_config.yaml
+    ports:
+      - "8118:8118"
     volumes:
       - ./vllm_config.yaml:/configs/vllm_config.yaml:ro
-    network_mode: host
     runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all

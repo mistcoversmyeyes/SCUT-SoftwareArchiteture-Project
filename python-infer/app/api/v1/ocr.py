@@ -129,17 +129,20 @@ async def ocr_text(
         raise HTTPException(status_code=500, detail=f"推理失败: {str(e)}")
 
 
-@router.post("/document", response_model=OCRResponse, summary="复杂文档解析（PaddleOCR-VL）")
+@router.post("/document/vl_model", response_model=OCRResponse, summary="复杂文档解析（PaddleOCR-VL，支持PDF）")
 async def ocr_document(
     file: UploadFile = File(..., description="图片或PDF文件"),
-    compress: bool = Form(False, description="是否前端已压缩")
+    compress: bool = Form(False, description="是否前端已压缩"),
+    format: str = Form("json", description="输出格式(json/markdown)")
 ):
     """
     使用PaddleOCR-VL进行复杂文档解析
 
-    - 适用场景：学术论文、财务报表、技术文档
+    - 适用场景：学术论文、财务报表、技术文档、PDF文档
     - 推理位置：宿主机对象 → Docker vLLM(8118)
-    - 预期耗时：~1.65s
+    - 预期耗时：~2.2s（图片） / ~3-5s（PDF，取决于页数）
+    - 支持格式：jpg/png/bmp/pdf
+    - 支持输出：json（结构化数据） / markdown（文档格式）
     """
     if not vl_service:
         raise HTTPException(status_code=503, detail="VL服务未初始化")
@@ -152,7 +155,7 @@ async def ocr_document(
 
         try:
             # 执行VL推理
-            prediction = vl_service.predict(temp_path)
+            prediction = vl_service.predict(temp_path, format=format)
 
             # 构造响应
             total_time = time.time() - total_start
@@ -183,14 +186,14 @@ async def ocr_document(
         raise HTTPException(status_code=500, detail=f"推理失败: {str(e)}")
 
 
-@router.post("/table", response_model=OCRResponse, summary="文档结构识别（StructureV3，支持PDF）")
+@router.post("/document/structure_model", response_model=OCRResponse, summary="文档结构识别（StructureV3，支持PDF）")
 async def ocr_table(
     file: UploadFile = File(..., description="图片或PDF文件"),
     compress: bool = Form(False, description="是否前端已压缩"),
     output_format: str = Form("json", description="输出格式(json/markdown)")
 ):
     """
-    使用PP-StructureV3进行文档结构识别
+    使用PP-StructureV3进行文档结构化解析
 
     - 适用场景：Excel截图、数据报表、统计表格、复杂文档、PDF文件
     - 推理位置：宿主机本地
