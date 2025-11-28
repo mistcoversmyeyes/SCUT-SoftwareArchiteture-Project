@@ -57,7 +57,7 @@ class ImagePreprocessor {
         }
       }
     } catch (error) {
-      console.log('WebGPU不可用，使用Canvas API处理:', error.message);
+      console.log('WebGPU不可用，将使用Canvas API处理:', error.message);
     }
   }
 
