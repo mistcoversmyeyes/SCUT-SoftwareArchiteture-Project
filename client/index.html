@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SCUT OCR 前端控制台</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header>
+      <div class="branding">
+        <h1>SCUT OCR 控制台</h1>
+        <p>对接 OCRv5 / PaddleOCR-VL / StructureV3 / 健康检查 / 监控指标</p>
+      </div>
+      <div class="status-pill" id="global-status">等待检测</div>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2>基础文本识别（OCRv5）</h2>
+        <p>适用于扫描件、证件照、纯文本截图。</p>
+        <form id="ocrv5-form">
+          <label class="field">
+            <span>上传图片 (jpg/png/bmp)</span>
+            <input type="file" id="ocrv5-file" accept=".jpg,.jpeg,.png,.bmp" required />
+          </label>
+          <label class="field checkbox">
+            <input type="checkbox" id="ocrv5-compress" />
+            <span>前端已压缩（compress=true）</span>
+          </label>
+          <button type="submit">开始识别</button>
+        </form>
+        <div class="result" id="ocrv5-result"></div>
+      </section>
+
+      <section class="card">
+        <h2>文档结构解析（PaddleOCR-VL）</h2>
+        <p>解析标题、段落、表格、公式，支持 PDF。</p>
+        <form id="vl-form">
+          <label class="field">
+            <span>上传文件 (jpg/png/bmp/pdf)</span>
+            <input type="file" id="vl-file" accept=".jpg,.jpeg,.png,.bmp,.pdf" required />
+          </label>
+          <label class="field checkbox">
+            <input type="checkbox" id="vl-compress" />
+            <span>前端已压缩（compress=true）</span>
+          </label>
+          <label class="field">
+            <span>输出格式</span>
+            <select id="vl-format">
+              <option value="json" selected>JSON（结构化数据）</option>
+              <option value="markdown">Markdown（排版文本）</option>
+            </select>
+          </label>
+          <button type="submit">开始解析</button>
+        </form>
+        <div class="result" id="vl-result"></div>
+      </section>
+
+      <section class="card">
+        <h2>文档结构识别（PP-StructureV3）</h2>
+        <p>面向表格与结构化文档，支持 PDF。</p>
+        <form id="structure-form">
+          <label class="field">
+            <span>上传文件 (jpg/png/bmp/pdf)</span>
+            <input type="file" id="structure-file" accept=".jpg,.jpeg,.png,.bmp,.pdf" required />
+          </label>
+          <label class="field checkbox">
+            <input type="checkbox" id="structure-compress" />
+            <span>前端已压缩（compress=true）</span>
+          </label>
+          <label class="field">
+            <span>输出格式</span>
+            <select id="structure-format">
+              <option value="json" selected>JSON（默认）</option>
+              <option value="markdown">Markdown</option>
+            </select>
+          </label>
+          <button type="submit">开始解析</button>
+        </form>
+        <div class="result" id="structure-result"></div>
+      </section>
+
+      <section class="card" id="preprocessor-settings">
+        <h2>🎨 图片预处理设置</h2>
+        <p>在上传到OCR服务前，自动优化图片质量和尺寸，提高识别速度和准确度。</p>
+        
+        <div class="preprocessor-status-bar">
+          <label class="field checkbox">
+            <input type="checkbox" id="preprocessor-toggle" checked />
+            <span>启用智能图片预处理</span>
+          </label>
+          <span class="status-badge status-enabled" id="preprocessor-status">已启用</span>
+        </div>
+
+        <details class="advanced-settings">
+          <summary>高级设置</summary>
+          <div class="settings-grid">
+            <label class="field">
+              <span>最大宽度 (px)</span>
+              <input type="number" id="max-width" value="2048" min="640" max="4096" />
+            </label>
+            <label class="field">
+              <span>最大高度 (px)</span>
+              <input type="number" id="max-height" value="2048" min="480" max="4096" />
+            </label>
+            <label class="field">
+              <span>图片质量 (0.1-1.0)</span>
+              <input type="number" id="quality" value="0.92" min="0.1" max="1.0" step="0.01" />
+            </label>
+            <label class="field">
+              <span>最大文件大小 (KB)</span>
+              <input type="number" id="max-file-size" value="1024" min="100" max="10240" />
+            </label>
+            <label class="field checkbox">
+              <input type="checkbox" id="enable-sharpen" checked />
+              <span>启用锐化增强</span>
+            </label>
+            <label class="field checkbox">
+              <input type="checkbox" id="enable-contrast" checked />
+              <span>启用对比度优化</span>
+            </label>
+          </div>
+          <button id="apply-preprocessor-settings" class="secondary">应用设置</button>
+        </details>
+
+        <div class="feature-list">
+          <h4>预处理功能：</h4>
+          <ul>
+            <li>✓ 自动压缩过大图片，减少上传时间</li>
+            <li>✓ 智能调整分辨率，保持OCR最佳识别效果</li>
+            <li>✓ 自适应锐化，提高文字清晰度</li>
+            <li>✓ 对比度增强，改善低质量图片识别率</li>
+            <li>✓ WebGPU加速（浏览器支持时自动启用）</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>服务监控</h2>
+        <div class="monitor-actions">
+          <button id="health-btn">检查健康状态</button>
+          <button id="metrics-btn">获取性能指标</button>
+        </div>
+        <div class="split-results">
+          <div>
+            <h3>健康检查</h3>
+            <div class="result small" id="health-result"></div>
+          </div>
+          <div>
+            <h3>性能指标</h3>
+            <div class="result small" id="metrics-result"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        请确保后端 API 运行在 <code>http://localhost:8090/api/v1</code>。
+        本页面完全基于 <code>docs/api-reference.md</code> 中的协议实现。
+      </p>
+    </footer>
+
+    <!-- PDF处理库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+      // 配置PDF.js worker
+      if (typeof pdfjsLib !== 'undefined') {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      }
+    </script>
+    
+    <script src="./imagePreprocessor.js"></script>
+    <script src="./main.js" defer></script>
+  </body>
+</html>
+

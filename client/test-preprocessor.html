@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>图片预处理器测试</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f7fa;
+    }
+    h1 {
+      color: #1e3a8a;
+      border-bottom: 3px solid #2563eb;
+      padding-bottom: 10px;
+    }
+    .test-section {
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .controls {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    input[type="file"] {
+      padding: 10px;
+      border: 2px dashed #cbd5e1;
+      border-radius: 8px;
+      width: 100%;
+    }
+    button {
+      padding: 12px 24px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    button:hover:not(:disabled) {
+      background: #1e40af;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .result-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+      min-height: 100px;
+    }
+    .result-box.success {
+      background: #f0fdf4;
+      border-color: #86efac;
+    }
+    .result-box.error {
+      background: #fef2f2;
+      border-color: #fca5a5;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .stat-item {
+      background: white;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stat-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 4px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 12px 0;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #06b6d4);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .progress-text {
+      font-size: 14px;
+      color: #64748b;
+      text-align: center;
+    }
+    .image-preview {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .preview-box {
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+    .preview-box img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .preview-box h4 {
+      margin: 0 0 8px 0;
+      color: #64748b;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+    .badge.success { background: #dcfce7; color: #16a34a; }
+    .badge.info { background: #dbeafe; color: #2563eb; }
+    .badge.warning { background: #fef3c7; color: #d97706; }
+  </style>
+</head>
+<body>
+  <h1>🎨 图片预处理器功能测试</h1>
+  
+  <div class="test-section">
+    <h2>基础测试</h2>
+    <p>选择图片或PDF文件，查看预处理效果</p>
+    
+    <div class="controls">
+      <div>
+        <label>选择文件：</label>
+        <input type="file" id="testFile" accept="image/*,application/pdf,.pdf">
+      </div>
+      <button id="processBtn" onclick="testProcess()">开始预处理</button>
+    </div>
+    
+    <div id="progressContainer" style="display: none;">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-text" id="progressText">准备中...</div>
+    </div>
+    
+    <div id="resultBox" class="result-box"></div>
+    
+    <div id="imagePreview" class="image-preview" style="display: none;"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>预处理器状态</h2>
+    <div id="statusInfo"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>测试建议</h2>
+    <h3>图片测试：</h3>
+    <ul>
+      <li><strong>测试1：大文件压缩</strong> - 上传一张>2MB的图片，查看压缩效果</li>
+      <li><strong>测试2：高分辨率图片</strong> - 上传一张>3000像素的图片，查看尺寸调整</li>
+      <li><strong>测试3：低质量图片</strong> - 上传一张模糊的图片，查看增强效果</li>
+      <li><strong>测试4：小文件</strong> - 上传一张<500KB的图片，应该跳过处理</li>
+    </ul>
+    <h3>PDF测试（新增）：</h3>
+    <ul>
+      <li><strong>测试5：中型PDF</strong> - 上传一个3-5MB的PDF，查看压缩效果</li>
+      <li><strong>测试6：多页PDF</strong> - 上传一个10-15页的PDF，观察页面处理</li>
+      <li><strong>测试7：小型PDF</strong> - 上传一个<2MB的PDF，应该跳过处理</li>
+    </ul>
+  </div>
+
+    <!-- PDF处理库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+      // 配置PDF.js worker
+      if (typeof pdfjsLib !== 'undefined') {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      }
+    </script>
+    
+    <script src="./imagePreprocessor.js"></script>
+  <script>
+    // 检查预处理器状态
+    function checkStatus() {
+      const statusDiv = document.getElementById('statusInfo');
+      let html = '<div class="stats-grid">';
+      
+      if (window.defaultPreprocessor) {
+        html += '<div class="stat-item">';
+        html += '<div class="stat-label">预处理器</div>';
+        html += '<div class="stat-value">✓ 已加载<span class="badge success">正常</span></div>';
+        html += '</div>';
+        
+        html += '<div class="stat-item">';
+        html += '<div class="stat-label">WebGPU</div>';
+        html += `<div class="stat-value">${window.defaultPreprocessor.webGPUAvailable ? '✓ 已启用' : '○ 未启用'}<span class="badge ${window.defaultPreprocessor.webGPUAvailable ? 'success' : 'info'}">${window.defaultPreprocessor.webGPUAvailable ? '硬件加速' : 'Canvas'}</span></div>`;
+        html += '</div>';
+        
+        const opts = window.defaultPreprocessor.options;
+        html += '<div class="stat-item">';
+        html += '<div class="stat-label">最大尺寸</div>';
+        html += `<div class="stat-value">${opts.maxWidth}x${opts.maxHeight}</div>`;
+        html += '</div>';
+        
+        html += '<div class="stat-item">';
+        html += '<div class="stat-label">图片质量</div>';
+        html += `<div class="stat-value">${(opts.quality * 100).toFixed(0)}%</div>`;
+        html += '</div>';
+      } else {
+        html += '<div class="stat-item">';
+        html += '<div class="stat-label">预处理器</div>';
+        html += '<div class="stat-value">✗ 未加载<span class="badge warning">错误</span></div>';
+        html += '</div>';
+      }
+      
+      html += '</div>';
+      statusDiv.innerHTML = html;
+    }
+
+    // 测试预处理功能
+    async function testProcess() {
+      const fileInput = document.getElementById('testFile');
+      const processBtn = document.getElementById('processBtn');
+      const resultBox = document.getElementById('resultBox');
+      const progressContainer = document.getElementById('progressContainer');
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+      const imagePreview = document.getElementById('imagePreview');
+      
+      if (!fileInput.files.length) {
+        resultBox.className = 'result-box error';
+        resultBox.innerHTML = '<strong>错误：</strong>请先选择一张图片！';
+        return;
+      }
+      
+      const file = fileInput.files[0];
+      
+      const isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+      
+      // 显示原始文件信息
+      resultBox.className = 'result-box';
+      resultBox.innerHTML = `
+        <strong>原始文件：</strong><br>
+        文件名：${file.name}<br>
+        大小：${(file.size / 1024).toFixed(2)} KB<br>
+        类型：${isPDF ? 'PDF文档' : file.type}
+      `;
+      
+      // 显示进度条
+      progressContainer.style.display = 'block';
+      progressFill.style.width = '0%';
+      processBtn.disabled = true;
+      
+      try {
+        // 执行预处理
+        const result = await window.defaultPreprocessor.process(file, (percent, message) => {
+          progressFill.style.width = `${percent}%`;
+          progressText.textContent = message;
+        });
+        
+        // 隐藏进度条
+        progressContainer.style.display = 'none';
+        
+        // 显示结果
+        if (result.processed) {
+          resultBox.className = 'result-box success';
+          
+          const stats = result.stats;
+          let html = '<strong>✓ 预处理成功！</strong>';
+          html += '<div class="stats-grid">';
+          html += `<div class="stat-item"><div class="stat-label">原始大小</div><div class="stat-value">${stats.originalSize} KB</div></div>`;
+          html += `<div class="stat-item"><div class="stat-label">处理后</div><div class="stat-value">${stats.processedSize} KB</div></div>`;
+          
+          // PDF特有统计
+          if (stats.pageCount) {
+            html += `<div class="stat-item"><div class="stat-label">页数</div><div class="stat-value">${stats.pageCount}页</div></div>`;
+          }
+          if (stats.extractedPages) {
+            html += `<div class="stat-item"><div class="stat-label">提取页数</div><div class="stat-value">${stats.extractedPages}页</div></div>`;
+          }
+          
+          // 图片特有统计
+          if (stats.originalDimensions) {
+            html += `<div class="stat-item"><div class="stat-label">原始尺寸</div><div class="stat-value">${stats.originalDimensions}</div></div>`;
+            html += `<div class="stat-item"><div class="stat-label">处理后</div><div class="stat-value">${stats.processedDimensions}</div></div>`;
+          }
+          
+          html += `<div class="stat-item"><div class="stat-label">压缩比</div><div class="stat-value">${stats.compressionRatio}x</div></div>`;
+          html += `<div class="stat-item"><div class="stat-label">处理时间</div><div class="stat-value">${stats.processingTime} ms</div></div>`;
+          html += '</div>';
+          
+          if (stats.enhancements) {
+            html += `<p style="margin-top: 12px;"><strong>应用增强：</strong>${stats.enhancements}</p>`;
+          }
+          if (stats.scale) {
+            html += `<p style="margin-top: 4px;"><strong>渲染比例：</strong>${stats.scale}</p>`;
+          }
+          if (stats.note) {
+            html += `<p style="margin-top: 4px; color: #f59e0b;"><strong>注意：</strong>${stats.note}</p>`;
+          }
+          
+          resultBox.innerHTML = html;
+          
+          // 显示对比（仅图片）
+          if (!isPDF && stats.originalDimensions) {
+            imagePreview.style.display = 'grid';
+            const originalUrl = URL.createObjectURL(file);
+            const processedUrl = URL.createObjectURL(result.file);
+            
+            imagePreview.innerHTML = `
+              <div class="preview-box">
+                <h4>原始图片</h4>
+                <img src="${originalUrl}" alt="原始图片">
+                <p style="margin-top: 8px; color: #64748b; font-size: 12px;">${stats.originalSize}KB · ${stats.originalDimensions}</p>
+              </div>
+              <div class="preview-box">
+                <h4>处理后图片</h4>
+                <img src="${processedUrl}" alt="处理后图片">
+                <p style="margin-top: 8px; color: #64748b; font-size: 12px;">${stats.processedSize}KB · ${stats.processedDimensions}</p>
+              </div>
+            `;
+          } else {
+            imagePreview.style.display = 'none';
+          }
+        } else {
+          resultBox.className = 'result-box';
+          resultBox.innerHTML = `<strong>ℹ 无需处理</strong><br>${result.stats.reason || '图片已经是最佳状态'}`;
+          imagePreview.style.display = 'none';
+        }
+        
+      } catch (error) {
+        progressContainer.style.display = 'none';
+        resultBox.className = 'result-box error';
+        resultBox.innerHTML = `<strong>✗ 处理失败：</strong><br>${error.message}`;
+        imagePreview.style.display = 'none';
+      } finally {
+        processBtn.disabled = false;
+      }
+    }
+    
+    // 初始化
+    checkStatus();
+    
+    console.log('图片预处理器测试页面已加载');
+    console.log('请选择图片并点击"开始预处理"按钮进行测试');
+  </script>
+</body>
+</html>
+
