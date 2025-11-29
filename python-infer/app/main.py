@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 FastAPI主入口文件
 OCR多产线统一网关
@@ -130,6 +131,6 @@ if __name__ == "__main__":
         "main:app",
         host="0.0.0.0",
         port=8090,
-        reload=True,
+        reload=False,  # 禁用自动重载，避免模型加载时被中断
         log_level="info"
     )

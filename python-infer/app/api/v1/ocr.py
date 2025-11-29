@@ -8,6 +8,8 @@ import time
 import tempfile
 import os
 import logging
+import json
+import math
 
 from core.models import OCRResponse, MetricsModel, ErrorResponse
 from core.config import settings
@@ -28,6 +30,54 @@ def set_services(ocr_v5, vl, structure_v3):
     ocr_v5_service = ocr_v5
     vl_service = vl
     structure_v3_service = structure_v3
+
+
+def sanitize_floats(obj):
+    """
+    递归清理对象中的特殊浮点值（inf, nan），使其JSON兼容
+
+    Args:
+        obj: 要清理的对象
+
+    Returns:
+        清理后的对象
+    """
+    if isinstance(obj, dict):
+        return {k: sanitize_floats(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [sanitize_floats(item) for item in obj]
+    elif isinstance(obj, float):
+        if math.isnan(obj):
+            return None
+        elif math.isinf(obj):
+            return None  # 将inf也转换为null
+        else:
+            return obj
+    else:
+        return obj
+
+
+def create_json_response(response_data):
+    """
+    创建JSON兼容的响应，处理特殊浮点值
+
+    Args:
+        response_data: 要响应的数据对象（通常是OCRResponse）
+
+    Returns:
+        JSON兼容的响应
+    """
+    # 转换为字典并清理特殊浮点值
+    response_dict = response_data.model_dump() if hasattr(response_data, 'model_dump') else response_data
+    clean_dict = sanitize_floats(response_dict)
+
+    # 使用标准的JSON序列化
+    json_str = json.dumps(clean_dict, ensure_ascii=False, separators=(',', ':'))
+
+    return JSONResponse(
+        content=json.loads(json_str),
+        media_type="application/json"
+    )
 
 
 async def process_upload_file(file: UploadFile) -> tuple[str, float, float]:
@@ -217,7 +267,8 @@ async def ocr_table(
             # 构造响应
             total_time = time.time() - total_start
 
-            return OCRResponse(
+            # 创建响应对象
+            response = OCRResponse(
                 success=True,
                 pipeline="structure",
                 result=prediction["result"],
@@ -231,6 +282,9 @@ async def ocr_table(
                     source=prediction["source"]
                 )
             )
+
+            # 使用清理后的JSON响应
+            return create_json_response(response)
         finally:
             # 清理临时文件
             if os.path.exists(temp_path):
